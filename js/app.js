@@ -1,34 +1,64 @@
-document.addEventListener('DOMContentLoaded', function() {
-    const requestURL = "https://www.reddit.com/search.json?q=new_car_launching+nsfw:no"
-    const imageArray = document.querySelectorAll(".carousel-item")
+let carouselSlide
+let seaerchForm
+let input
+let baseEndPoint = 'https://www.reddit.com/search.json?q='
+let resultsArray = []
+let currIndex = 0
+let interval
+let resetButton
 
+const changePhoto = () => {
+    if (resultsArray[currIndex].data.thumbnail) {
+        currIndex++
+    } else {
+        currIndex = 0
+    }
+    carouselSlide.setAttributes('src', resultsArray[currIndex].data.thumbnail)
+}
 
-    fetch(requestURL)
-    .then (function(response) {
-        console.log(response);
-        return response.json();
+const startSlideshow = () => {
+    console.log("starting slideshow")
+}
+    
+
+const getSearchResults = () => {
+    fetch(`${baseEndPoint}${input.value}`)
+    .then(response => {
+        return response.json()
+    })
+    .then(jsonData => {
+        resultsArray = jsonData.data.children.map((result) => {
+            return result.data.thumbnail
+        })
+        // carouselSlide.setAttributes('src', resultsArray[currIndex].data.thumbnail)
+        startSlideshow()
+    })
+}
+//.catch(err => {
+  //  console.log("there's an error fetching the result")
+//})
+
+document.addEventListener('DOMContentLoaded', ()=> {
+    carouselSlide = document.getElementById("carouselSlide")
+    seaerchForm = document.querySelector("form")
+    input = document.querySelector("input")
+
+    seaerchForm.addEventListener("submit", (e) =>{
+        e.preventDefault()
+
+        carouselSlide.style.display = "block"
+
+        seaerchForm.style.display = "none"
+
+        getSearchResults()
     })
 
-    .then(data => {
-        console.log(data.data.children[0].data.thumbnail);
+    resetButton.addEventListener("click", ()=> {
+        carouselSlide.style.display = "none"
 
-        let thumbSearch = data.data.children;     // declare and make a function to thumbnail
-        for (let i = 0; i < thumbSearch.length; i++) {
-            let thumbNail = thumbSearch[i].data.thumbnail;
-            console.log(thumbNail)
-
-            imageArray[i].src = thumbNail;
-
-
-        }
-
-        
-
-
-    })
-    .catch (error => {
-        console.log("It's error", error);
+        seaerchForm.style.display = "block"
+        resultsArray = []
+        clearInterval(interval)
     })
 
 })
-
